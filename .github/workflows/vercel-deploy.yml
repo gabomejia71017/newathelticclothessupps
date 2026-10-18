@@ -13,5 +13,5 @@ jobs:
         env:
           HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
         run: |
-          if [ -z "$HOOK" ]; then echo "Falta el secreto VERCEL_DEPLOY_HOOK"; exit 0; fi
+          if [ -z "$HOOK" ]; then echo "::error::Falta el secreto VERCEL_DEPLOY_HOOK"; exit 1; fi
           curl -fsS -X POST "$HOOK"
