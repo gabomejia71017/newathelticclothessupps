@@ -702,3 +702,12 @@ html, body { overflow-x: clip; }
 /* Los textos ocultos para lectores de pantalla (precio "antes/ahora") se salían
    del carrusel y ensanchaban la página en celular. Los contenemos aquí. */
 .rail, .card { position: relative; }
+
+/* Encabezado compacto en páginas de categoría, marca, ofertas, combos y búsqueda */
+.page-head--compact { background: #fff; color: #000; padding: 22px 0 6px; text-align: left; }
+.page-head--compact .breadcrumb { color: var(--gray-500); margin-bottom: 6px; font-size: 11px; }
+.page-head--compact .breadcrumb a:hover { color: #000; }
+.page-head--compact h1 { font-size: clamp(22px, 3vw, 34px); }
+.page-head--compact p { color: var(--gray-700); margin-top: 4px; font-size: 14px; }
+.page-head--compact + .listing .toolbar { padding-top: 14px; border-top: 1px solid var(--line); margin-top: 14px; }
+@media (max-width: 767px) { .page-head--compact { padding-top: 18px; } .toolbar .select { height: 38px; font-size: 13px; } }

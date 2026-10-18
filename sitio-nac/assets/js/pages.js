@@ -232,17 +232,19 @@
     setMeta(title, subtitle || ("Compra " + title.toLowerCase() + " en " + S.name + ". Envíos a todo Colombia."));
     const crumbHTML = '<nav class="breadcrumb" aria-label="Ruta"><a href="' + url("index.html") + '">Inicio</a>' + (crumbs || []).map((c) => " / " + (c.href ? '<a href="' + url(c.href) + '">' + esc(c.label) + "</a>" : esc(c.label))).join("") + "</nav>";
     main.innerHTML =
-      '<div class="page-head"><div class="container">' + crumbHTML + "<h1>" + esc(title) + "</h1>" + (subtitle ? "<p>" + esc(subtitle) + "</p>" : "") + (chips || "") + "</div></div>" +
-      '<div class="container listing"><div class="toolbar"><span class="toolbar__count" data-count></span>' +
+      heroCarousel() +
+      '<div class="page-head page-head--compact"><div class="container">' + crumbHTML + "<h1>" + esc(title) + "</h1>" + (subtitle ? "<p>" + esc(subtitle) + "</p>" : "") + "</div></div>" +
+      '<div class="container listing"><div class="toolbar"><span class="toolbar__count" data-list-count></span>' +
         '<label><span class="sr-only">Ordenar</span><select class="select" data-sort><option value="">Ordenar: destacados</option><option value="price-asc">Precio: menor a mayor</option><option value="price-desc">Precio: mayor a menor</option><option value="name">Nombre A–Z</option></select></label>' +
       '</div><div data-grid></div></div>';
     const draw = () => {
       const sorted = C.sortProducts(list, $("[data-sort]").value);
       $("[data-grid]").innerHTML = N.productGrid(sorted, 4);
-      $("[data-count]").textContent = list.length + (list.length === 1 ? " producto" : " productos");
+      $("[data-list-count]").textContent = list.length + (list.length === 1 ? " producto" : " productos");
     };
     $("[data-sort]").addEventListener("change", draw);
     draw();
+    initHeroCarousel();
   }
 
   function notFound(msg) {
@@ -254,8 +256,7 @@
     const slug = params.get("c");
     const cat = C.getCategory(slug);
     if (!cat) return notFound("Esta categoría no existe.");
-    const chips = '<div class="chips">' + S.categories.map((c) => '<a class="chip' + (c.slug === slug ? " is-active" : "") + '" href="' + url("categoria.html?c=" + c.slug) + '">' + esc(c.name) + "</a>").join("") + "</div>";
-    renderListing({ title: cat.name, list: C.getByCategory(slug), crumbs: [{ label: "Categorías" }, { label: cat.name }], chips });
+    renderListing({ title: cat.name, list: C.getByCategory(slug), crumbs: [{ label: "Categorías" }, { label: cat.name }] });
   }
 
   function renderBrand() {
