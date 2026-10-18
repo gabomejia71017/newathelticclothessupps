@@ -41,7 +41,8 @@ window.SITE = {
      - image / imageMobile: tu foto de fondo (opcional; 1920x700 y 900x1100)
      - products: slugs de productos cuyas fotos se muestran a la derecha
      - theme: "dark" (negro) o "light" (blanco)
-     - cta: botones (máximo 2) */
+     - href: página a la que lleva al tocar la diapositiva
+     - cta: botones opcionales, ej: [{ label: "Ver ofertas", href: "ofertas.html" }] */
   hero: [
     {
       kicker: "NEW ATHLETIC CLOTHES",
@@ -50,10 +51,7 @@ window.SITE = {
       text: "Proteínas, creatinas y pre-entrenos 100 % originales con envío a todo Colombia.",
       theme: "dark",
       products: ["iso-100-5lb", "nitro-tech-whey-gold-5lb", "100-whey-gold-standard-5lb"],
-      cta: [
-        { label: "Comprar ahora", href: "categoria.html?c=proteinas" },
-        { label: "Ver ofertas", href: "ofertas.html" },
-      ],
+      href: "categoria.html?c=proteinas",
       image: "", imageMobile: "",
     },
     {
@@ -63,7 +61,7 @@ window.SITE = {
       text: "Creatina para más fuerza en cada repetición. Elige la tuya.",
       theme: "light",
       products: ["creatina-platinum-muscletech", "tnt-mega-mass-gainer-10lb"],
-      cta: [{ label: "Ver creatinas", href: "categoria.html?c=creatinas" }],
+      href: "categoria.html?c=creatinas",
       image: "", imageMobile: "",
     },
     {
@@ -73,10 +71,7 @@ window.SITE = {
       text: "Descuentos en tus marcas favoritas por tiempo limitado.",
       theme: "dark",
       products: ["tnt-mega-mass-gainer-10lb", "nitro-tech-whey-gold-5lb", "iso-100-5lb"],
-      cta: [
-        { label: "Ver ofertas", href: "ofertas.html" },
-        { label: "Pedir por WhatsApp", href: "whatsapp" },
-      ],
+      href: "ofertas.html",
       image: "", imageMobile: "",
     },
   ],

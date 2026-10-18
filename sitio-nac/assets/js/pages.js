@@ -106,12 +106,13 @@
       : "";
     return '<div class="slide slide--' + (dark ? "dark" : "light") + (b.image ? " slide--photo" : "") + '" role="group" aria-roledescription="diapositiva" aria-label="' + (i + 1) + " de " + S.hero.length + '">' +
       visual + '<div class="slide__deco" aria-hidden="true"></div>' +
+      (b.href ? '<a class="slide__link" href="' + link(b.href) + '"' + ext(b.href) + ' aria-label="' + esc(b.title + " " + b.subtitle) + '"></a>' : "") +
       '<div class="container slide__inner">' +
         '<div class="slide__copy">' +
           '<p class="slide__kicker">' + esc(b.kicker) + "</p>" +
           (i === 0 ? "<h2" : "<h2") + ' class="slide__title">' + esc(b.title) + ' <span class="slide__outline">' + esc(b.subtitle) + "</span></h2>" +
           (b.text ? '<p class="slide__text">' + esc(b.text) + "</p>" : "") +
-          '<div class="slide__ctas">' + ctas + "</div>" +
+          (ctas ? '<div class="slide__ctas">' + ctas + "</div>" : "") +
         "</div>" + stack +
       "</div></div>";
   }
