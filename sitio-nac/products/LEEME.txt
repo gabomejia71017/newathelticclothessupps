@@ -1,4 +1,0 @@
-Coloca aquí las fotos de tus productos.
-Recomendado: JPG o WEBP cuadrado, 1000x1000 px, fondo blanco, menos de 200 KB.
-Nombres sin tildes ni espacios, ej: whey-isolate-2lb-1.jpg
-Luego agrégalas en data/products.js → images: ["products/whey-isolate-2lb-1.jpg"]
