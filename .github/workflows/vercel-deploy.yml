@@ -1,0 +1,17 @@
+# Publica la página en Vercel cada vez que hay cambios en la rama main.
+# Usa el Deploy Hook guardado como secreto VERCEL_DEPLOY_HOOK en GitHub.
+name: Publicar en Vercel
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar al Deploy Hook de Vercel
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "Falta el secreto VERCEL_DEPLOY_HOOK"; exit 0; fi
+          curl -fsS -X POST "$HOOK"
