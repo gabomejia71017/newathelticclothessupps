@@ -1,0 +1,6 @@
+Coloca aquí tus banners.
+- Hero escritorio: 1920x800 px (hero-1.jpg, hero-2.jpg)
+- Hero celular: 900x1100 px (hero-1-movil.jpg)
+- Franjas "Clic aquí": 1920x400 px
+- Banners verticales (filas de 3): 800x1000 px (proporción 4:5)
+Luego pon la ruta en config/site.js, ej: image: "banners/hero-1.jpg"
