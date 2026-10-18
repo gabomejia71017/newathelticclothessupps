@@ -100,7 +100,11 @@
       ? '<picture class="slide__photo">' + (b.imageMobile ? '<source media="(max-width: 767px)" srcset="' + esc(url(b.imageMobile)) + '">' : "") +
         '<img src="' + esc(url(b.image)) + '" alt="" ' + (i === 0 ? 'fetchpriority="high"' : 'loading="lazy"') + "></picture>"
       : "";
-    const stack = prods.length
+    const floats = (b.floating || []).slice(0, 3);
+    const stack = floats.length
+      ? '<div class="stage stage--' + floats.length + '" aria-hidden="true"><span class="stage__rays"></span><span class="stage__glow"></span><span class="stage__sparks"></span><span class="stage__sparks stage__sparks--b"></span>' +
+        floats.map((src, k) => '<img class="stage__item stage__item--' + (k + 1) + '" src="' + esc(url(src)) + '" alt="" ' + (i === 0 ? "" : 'loading="eager"') + ' width="300" height="450">').join("") + "</div>"
+      : prods.length
       ? '<div class="slide__products" aria-hidden="true">' + prods.map((pr, k) =>
           '<a class="slide__product slide__product--' + (k + 1) + '" href="' + url("producto.html?p=" + pr.slug) + '" tabindex="-1">' + N.productImage(pr).replace('loading="lazy"', 'loading="eager"') + "</a>").join("") + "</div>"
       : "";

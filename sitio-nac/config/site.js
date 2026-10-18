@@ -39,7 +39,8 @@ window.SITE = {
   /* CARRUSEL PRINCIPAL (pasa solo cada 6 segundos).
      Cada diapositiva puede tener:
      - image / imageMobile: tu foto de fondo (opcional; 1920x700 y 900x1100)
-     - products: slugs de productos cuyas fotos se muestran a la derecha
+     - products: slugs de productos cuyas fotos se muestran a la derecha (en tarjetas)
+     - floating: fotos SIN FONDO (PNG) para mostrar los tarros flotando; si existe, reemplaza a products
      - theme: "dark" (negro) o "light" (blanco)
      - href: página a la que lleva al tocar la diapositiva
      - cta: botones opcionales, ej: [{ label: "Ver ofertas", href: "ofertas.html" }] */
@@ -51,6 +52,8 @@ window.SITE = {
       text: "Proteínas, creatinas y pre-entrenos 100 % originales con envío a todo Colombia.",
       theme: "dark",
       products: ["iso-100-5lb", "nitro-tech-whey-gold-5lb", "100-whey-gold-standard-5lb"],
+      // Fotos SIN FONDO (PNG transparente) para el efecto de tarros flotando
+      floating: ["products/sin-fondo/iso-100-5lb.png", "products/sin-fondo/nitro-tech-whey-gold-5lb.png", "products/sin-fondo/100-whey-gold-standard-5lb.png"],
       href: "categoria.html?c=proteinas",
       image: "", imageMobile: "",
     },
@@ -71,6 +74,7 @@ window.SITE = {
       text: "Descuentos en tus marcas favoritas por tiempo limitado.",
       theme: "dark",
       products: ["tnt-mega-mass-gainer-10lb", "nitro-tech-whey-gold-5lb", "iso-100-5lb"],
+      floating: ["products/sin-fondo/nitro-tech-whey-gold-5lb.png", "products/sin-fondo/100-whey-gold-standard-5lb.png"],
       href: "ofertas.html",
       image: "", imageMobile: "",
     },

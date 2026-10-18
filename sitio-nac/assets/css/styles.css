@@ -711,3 +711,54 @@ html, body { overflow-x: clip; }
 .page-head--compact p { color: var(--gray-700); margin-top: 4px; font-size: 14px; }
 .page-head--compact + .listing .toolbar { padding-top: 14px; border-top: 1px solid var(--line); margin-top: 14px; }
 @media (max-width: 767px) { .page-head--compact { padding-top: 18px; } .toolbar .select { height: 38px; font-size: 13px; } }
+
+/* =========================================================================
+   Carrusel: tarros flotando con resplandor y chispas (fotos sin fondo)
+   ========================================================================= */
+.stage { position: relative; height: 300px; pointer-events: none; }
+.stage__glow { position: absolute; left: 50%; top: 52%; width: 420px; height: 300px; transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(255,255,255,.55), rgba(255,255,255,.12) 55%, transparent 75%); filter: blur(10px); }
+.slide--light .stage__glow { background: radial-gradient(closest-side, rgba(0,0,0,.18), rgba(0,0,0,.05) 55%, transparent 75%); }
+.stage__rays { position: absolute; left: 50%; top: 50%; width: 760px; height: 760px; transform: translate(-50%, -50%);
+  background: repeating-conic-gradient(from 0deg, rgba(255,255,255,.07) 0deg 4deg, transparent 4deg 18deg);
+  -webkit-mask-image: radial-gradient(closest-side, #000 15%, transparent 70%); mask-image: radial-gradient(closest-side, #000 15%, transparent 70%);
+  animation: raysSpin 60s linear infinite; }
+.slide--light .stage__rays { background: repeating-conic-gradient(from 0deg, rgba(0,0,0,.05) 0deg 4deg, transparent 4deg 18deg); }
+@keyframes raysSpin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+/* chispas: puntos pequeños que suben y titilan */
+.stage__sparks { position: absolute; inset: -10% -6%; opacity: .9;
+  background-image:
+    radial-gradient(2px 2px at 12% 30%, #fff, transparent), radial-gradient(1.5px 1.5px at 22% 70%, #fff, transparent),
+    radial-gradient(2px 2px at 35% 15%, #fff, transparent), radial-gradient(1px 1px at 41% 82%, #fff, transparent),
+    radial-gradient(2.5px 2.5px at 58% 22%, #fff, transparent), radial-gradient(1.5px 1.5px at 66% 64%, #fff, transparent),
+    radial-gradient(2px 2px at 78% 38%, #fff, transparent), radial-gradient(1px 1px at 86% 76%, #fff, transparent),
+    radial-gradient(2px 2px at 92% 18%, #fff, transparent), radial-gradient(1.5px 1.5px at 6% 58%, #fff, transparent),
+    radial-gradient(1px 1px at 50% 92%, #fff, transparent), radial-gradient(2px 2px at 72% 90%, #fff, transparent);
+  animation: sparksUp 7s linear infinite; }
+.stage__sparks--b { transform: scaleX(-1); animation-duration: 10s; animation-delay: -3s; opacity: .6; }
+.slide--light .stage__sparks { filter: invert(1); opacity: .5; }
+@keyframes sparksUp { 0% { translate: 0 18px; opacity: 0; } 15% { opacity: .9; } 85% { opacity: .9; } 100% { translate: 0 -26px; opacity: 0; } }
+/* tarros */
+.stage__item { position: absolute; top: 50%; left: 50%; height: 250px; width: auto; filter: drop-shadow(0 26px 22px rgba(0,0,0,.55)); }
+.slide--light .stage__item { filter: drop-shadow(0 22px 18px rgba(0,0,0,.28)); }
+.stage--3 .stage__item--1 { z-index: 3; height: 270px; --r: 0deg;  --x: -50%;  --y: -50%; }
+.stage--3 .stage__item--2 { z-index: 2; height: 215px; --r: -12deg; --x: -138%; --y: -44%; }
+.stage--3 .stage__item--3 { z-index: 2; height: 215px; --r: 12deg;  --x: 38%;   --y: -44%; }
+.stage--2 .stage__item--1 { z-index: 2; height: 255px; --r: -14deg; --x: -95%;  --y: -62%; }
+.stage--2 .stage__item--2 { z-index: 3; height: 230px; --r: 12deg;  --x: -5%;   --y: -36%; }
+.stage--1 .stage__item--1 { height: 270px; --r: -6deg; --x: -50%; --y: -50%; }
+.stage__item { transform: translate(var(--x), var(--y)) rotate(var(--r)); animation: floaty 5s ease-in-out infinite; }
+.stage__item--2 { animation-delay: -1.6s; } .stage__item--3 { animation-delay: -3.2s; }
+@keyframes floaty { 0%,100% { transform: translate(var(--x), var(--y)) rotate(var(--r)); } 50% { transform: translate(var(--x), calc(var(--y) - 10px)) rotate(var(--r)); } }
+.slide:not(.is-active) .stage__item { opacity: 0; transition: opacity .4s; }
+.slide.is-active .stage__item { opacity: 1; transition: opacity .6s .15s; }
+@media (prefers-reduced-motion: reduce) { .stage__rays, .stage__sparks, .stage__item { animation: none; } }
+@media (max-width: 899px) {
+  .stage { height: 170px; margin-top: 2px; }
+  .stage__glow { width: 300px; height: 190px; }
+  .stage__rays { width: 460px; height: 460px; }
+  .stage__item { height: 150px; }
+  .stage--3 .stage__item--1 { height: 160px; } .stage--3 .stage__item--2, .stage--3 .stage__item--3 { height: 125px; }
+  .stage--3 .stage__item--2 { --x: -132%; } .stage--3 .stage__item--3 { --x: 32%; }
+  .stage--2 .stage__item--1 { height: 150px; } .stage--2 .stage__item--2 { height: 135px; }
+}
