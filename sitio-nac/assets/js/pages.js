@@ -23,8 +23,7 @@
         (b.imageMobile ? '<source media="(max-width: 767px)" srcset="' + esc(url(b.imageMobile)) + '">' : "") +
         '<img src="' + esc(url(b.image)) + '" alt="' + esc(b.alt) + '" width="1920" height="800" fetchpriority="high"></picture></a>';
     }
-    const logo = b.theme === "dark" ? "assets/brand/logo-blanco.png" : "assets/brand/logo-negro.png";
-    return '<a class="hero__banner" href="' + url(b.href) + '" aria-label="' + esc(b.alt) + '">' +
+    return '<div class="hero__banner">' +
       '<div class="hero-art hero-art--' + b.theme + '">' +
         '<div class="hero-art__rings" aria-hidden="true"></div>' +
         '<div class="hero-art__bgword" aria-hidden="true">NAC</div>' +
@@ -32,9 +31,37 @@
           '<div class="hero-art__kicker">' + esc(b.kicker) + "</div>" +
           '<h2 class="hero-art__title">' + esc(b.title) + "</h2>" +
           '<p class="hero-art__subtitle">' + esc(b.subtitle) + "</p>" +
-          '<img class="hero-art__logo" src="' + url(logo) + '" alt="" width="600" height="210">' +
+          heroCtas(b) +
         "</div>" +
-      "</div></a>";
+      "</div></div>";
+  }
+
+  // Botones del banner (config/site.js → hero[].cta)
+  function heroCtas(b) {
+    const ctas = b.cta && b.cta.length ? b.cta : [{ label: "Comprar ahora", href: b.href }];
+    const dark = b.theme === "dark";
+    return '<div class="hero-art__ctas">' + ctas.map((c, i) => {
+      const cls = i === 0 ? (dark ? "btn btn--light" : "btn") : (dark ? "btn btn--ghost-light" : "btn btn--outline");
+      return '<a class="' + cls + '" href="' + url(c.href) + '">' + esc(c.label) + "</a>";
+    }).join("") + "</div>";
+  }
+
+  // Barra de beneficios (config/site.js → benefits)
+  function benefits() {
+    if (!S.benefits || !S.benefits.length) return "";
+    return '<section class="benefits" aria-label="Por qué comprar con nosotros"><div class="container benefits__grid">' + S.benefits.map((b) => {
+      const href = b.link === "whatsapp" ? waLink() : b.link === "instagram" ? S.social.instagram : (b.link ? url(b.link) : "");
+      const tag = href ? 'a href="' + esc(href) + '"' + (/^https?:/.test(href) ? ' target="_blank" rel="noopener"' : "") : "div";
+      return "<" + tag + ' class="benefit">' + '<span class="benefit__icon">' + (N.ICON[b.icon] || "") + "</span>" +
+        '<span><strong class="benefit__title">' + esc(b.title) + '</strong><span class="benefit__text">' + esc(b.text) + "</span></span></" + tag.split(" ")[0] + ">";
+    }).join("") + "</div></section>";
+  }
+
+  // Accesos rápidos por categoría
+  function categoryNav() {
+    return '<nav class="catnav" aria-label="Compra por categoría"><div class="container"><div class="catnav__row">' +
+      S.categories.map((c) => '<a class="catnav__item" href="' + url("categoria.html?c=" + c.slug) + '">' + esc(c.name) + "</a>").join("") +
+      "</div></div></nav>";
   }
 
   function strip(s, i) {
@@ -54,9 +81,11 @@
       "</a>").join("") + "</div></section>";
   }
 
-  function section(title, list, cols, moreHref) {
-    return '<section class="section"><div class="container"><h2 class="section__title">' + esc(title) + "</h2>" + N.productGrid(list, cols) +
-      (moreHref ? '<div class="section__more"><a class="btn btn--outline" href="' + url(moreHref) + '">Ver todos</a></div>' : "") + "</div></section>";
+  function section(title, list, cols, moreHref, kicker) {
+    return '<section class="section"><div class="container">' +
+      '<div class="section__head"><div>' + (kicker ? '<p class="section__kicker">' + esc(kicker) + "</p>" : "") + '<h2 class="section__title">' + esc(title) + "</h2></div>" +
+      (moreHref ? '<a class="section__link" href="' + url(moreHref) + '">Ver todos <span aria-hidden="true">→</span></a>' : "") + "</div>" +
+      N.productGrid(list, cols) + "</div></section>";
   }
 
   function renderHome() {
@@ -67,12 +96,13 @@
     main.innerHTML =
       '<h1 class="sr-only">' + esc(S.name) + " — Suplementos deportivos en Colombia</h1>" +
       '<div class="hero-row">' + S.hero.map(heroBanner).join("") + "</div>" +
-      '<div class="strip-row">' + S.heroStrips.map(strip).join("") + "</div>" +
-      section("Suplementos más vendidos", best, 4) +
+      benefits() +
+      categoryNav() +
+      section("Suplementos más vendidos", best, 4, "", "Los favoritos") +
       (S.bannerRows[0] ? bannerRow(S.bannerRows[0]) : "") +
-      section("Suplementos en oferta", offers, 4, "ofertas.html") +
+      section("Suplementos en oferta", offers, 4, "ofertas.html", "Precio especial") +
       (S.bannerRows[1] ? bannerRow(S.bannerRows[1]) : "") +
-      section("Nuevos suplementos", news, 5);
+      section("Nuevos suplementos", news, 5, "", "Recién llegados");
   }
 
   // ---------------- LISTADOS ----------------

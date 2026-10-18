@@ -32,6 +32,9 @@
     chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>',
     up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>',
     chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 19.5 5.6 16A8 8 0 1 1 8.4 18.6Z"/><path d="M9.3 9.2c.2 2.3 1.8 4.1 4.3 4.9l1-1.1 1.8.8-.4 1.6c-3.9.2-7.6-3.2-7.5-7l1.6-.4.8 1.8Z" fill="currentColor" stroke="none"/></svg>',
+    truck: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.5h11v9h-11zM13.5 9.5h4l3 3v3h-7"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>',
+    shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6Z"/><path d="m8.8 12 2.2 2.2 4.3-4.4"/></svg>',
+    card: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>',
     instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/></svg>',
     facebook: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.5-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.8 1.4-3.8 3.9v2.3H7.9v3h2.6V21h3Z"/></svg>',
     tiktok: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 3c.3 2.2 1.6 3.6 3.9 3.8v3a7 7 0 0 1-3.8-1.2v6.1a5.7 5.7 0 1 1-5.7-5.7l.6.1v3.1a2.7 2.7 0 1 0 2 2.6V3h3Z"/></svg>',
@@ -71,15 +74,25 @@
     return (
       '<a class="card' + (soldOut ? " is-soldout" : "") + '" href="' + url("producto.html?p=" + encodeURIComponent(p.slug)) + '">' +
         '<div class="card__media">' +
-          (sale ? '<span class="badge">¡Oferta!</span>' : "") +
+          (sale ? '<span class="badge">' + saleLabel(p) + "</span>" : "") +
           (soldOut ? '<span class="badge badge--soldout' + (sale ? " badge--second" : "") + '">Agotado</span>' : "") +
           productImage(p) +
           '<div class="card__overlay" aria-hidden="true"><span>Ver producto</span></div>' +
         "</div>" +
+        '<div class="card__body">' +
+        (C.getBrand(p.brand) && p.brand !== "otras" ? '<p class="card__brand">' + esc(C.getBrand(p.brand).name) + "</p>" : "") +
         '<h3 class="card__title">' + esc(p.name) + "</h3>" +
         '<p class="card__price">' + priceHTML(p) + "</p>" +
+        "</div>" +
       "</a>"
     );
+  }
+
+  /** Etiqueta de oferta: muestra el % de descuento cuando se puede calcular */
+  function saleLabel(p) {
+    const info = C.priceInfo(p);
+    const pct = info.regular > info.min ? Math.round((1 - info.min / info.regular) * 100) : 0;
+    return pct >= 1 && info.min === info.max ? "−" + pct + "%" : "¡Oferta!";
   }
 
   function productGrid(list, cols = 4) {

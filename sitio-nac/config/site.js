@@ -48,6 +48,10 @@ window.SITE = {
       theme: "dark",
       href: "categoria.html?c=proteinas",
       alt: "Suplementación con actitud — New Athletic Clothes",
+      cta: [
+        { label: "Ver proteínas", href: "categoria.html?c=proteinas" },
+        { label: "Ver ofertas", href: "ofertas.html" },
+      ],
     },
     {
       image: "",
@@ -58,9 +62,20 @@ window.SITE = {
       theme: "light",
       href: "ofertas.html",
       alt: "Tu mejor versión empieza hoy",
+      cta: [{ label: "Ver creatinas", href: "categoria.html?c=creatinas" }],
     },
   ],
 
+  // Barra de beneficios debajo del hero.
+  // icon: truck | shield | chat | instagram | card ; link: "whatsapp", "instagram", una página o "" (sin enlace)
+  benefits: [
+    { icon: "truck", title: "Envíos a todo Colombia", text: "Despacho rápido a tu ciudad", link: "" },
+    { icon: "shield", title: "100 % originales", text: "Marcas y sellos verificados", link: "" },
+    { icon: "chat", title: "Asesoría gratis", text: "Escríbenos por WhatsApp", link: "whatsapp" },
+    { icon: "instagram", title: "@nathletic.c", text: "Síguenos en Instagram", link: "instagram" },
+  ],
+
+  // (Ya no se usan en el inicio; se reemplazaron por la barra de beneficios)
   // Franjas con botón "Clic aquí" debajo del hero
   heroStrips: [
     {
