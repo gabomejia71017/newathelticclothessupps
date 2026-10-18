@@ -762,3 +762,10 @@ html, body { overflow-x: clip; }
   .stage--3 .stage__item--2 { --x: -132%; } .stage--3 .stage__item--3 { --x: 32%; }
   .stage--2 .stage__item--1 { height: 150px; } .stage--2 .stage__item--2 { height: 135px; }
 }
+
+/* Fondo sobrio: solo los círculos detrás de los tarros (sin luz ni chispas) */
+.stage__glow, .stage__rays, .stage__sparks { display: none; }
+.slide__deco { opacity: .16; right: -4%; width: 66vmin; height: 66vmin; }
+.slide--light .slide__deco { opacity: .12; }
+@media (min-width: 900px) { .slide__deco { right: 4%; width: 560px; height: 560px; } }
+@media (max-width: 899px) { .slide__deco { right: 50%; top: auto; bottom: -110px; transform: translateX(50%); width: 360px; height: 360px; opacity: .14; } }
