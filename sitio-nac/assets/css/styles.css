@@ -696,3 +696,9 @@ html, body { overflow-x: clip; }
   .slide__deco { opacity: .08; }
 }
 @media (max-width: 380px) { .slide__product { width: 72px; } .slide__product--1 { width: 84px; } }
+/* Carruseles de productos: nunca más anchos que la pantalla */
+.rail { width: 100%; max-width: 100%; min-width: 0; contain: inline-size; }
+.rail > .card { min-width: 0; }
+/* Los textos ocultos para lectores de pantalla (precio "antes/ahora") se salían
+   del carrusel y ensanchaban la página en celular. Los contenemos aquí. */
+.rail, .card { position: relative; }
