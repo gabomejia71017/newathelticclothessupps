@@ -88,6 +88,123 @@
       N.productGrid(list, cols) + "</div></section>";
   }
 
+  // ================= CARRUSEL PRINCIPAL =================
+  function heroSlide(b, i) {
+    const dark = b.theme !== "light";
+    const link = (h) => (h === "whatsapp" ? waLink() : url(h));
+    const ext = (h) => (h === "whatsapp" ? ' target="_blank" rel="noopener"' : "");
+    const ctas = (b.cta || []).slice(0, 2).map((c, k) =>
+      '<a class="btn ' + (k === 0 ? (dark ? "btn--light" : "") : (dark ? "btn--ghost-light" : "btn--outline")) + '" href="' + link(c.href) + '"' + ext(c.href) + ">" + esc(c.label) + "</a>").join("");
+    const prods = (b.products || []).map((sl) => C.getProductBySlug(sl)).filter(Boolean).slice(0, 3);
+    const visual = b.image
+      ? '<picture class="slide__photo">' + (b.imageMobile ? '<source media="(max-width: 767px)" srcset="' + esc(url(b.imageMobile)) + '">' : "") +
+        '<img src="' + esc(url(b.image)) + '" alt="" ' + (i === 0 ? 'fetchpriority="high"' : 'loading="lazy"') + "></picture>"
+      : "";
+    const stack = prods.length
+      ? '<div class="slide__products" aria-hidden="true">' + prods.map((pr, k) =>
+          '<a class="slide__product slide__product--' + (k + 1) + '" href="' + url("producto.html?p=" + pr.slug) + '" tabindex="-1">' + N.productImage(pr).replace('loading="lazy"', 'loading="eager"') + "</a>").join("") + "</div>"
+      : "";
+    return '<div class="slide slide--' + (dark ? "dark" : "light") + (b.image ? " slide--photo" : "") + '" role="group" aria-roledescription="diapositiva" aria-label="' + (i + 1) + " de " + S.hero.length + '">' +
+      visual + '<div class="slide__deco" aria-hidden="true"></div>' +
+      '<div class="container slide__inner">' +
+        '<div class="slide__copy">' +
+          '<p class="slide__kicker">' + esc(b.kicker) + "</p>" +
+          (i === 0 ? "<h2" : "<h2") + ' class="slide__title">' + esc(b.title) + ' <span class="slide__outline">' + esc(b.subtitle) + "</span></h2>" +
+          (b.text ? '<p class="slide__text">' + esc(b.text) + "</p>" : "") +
+          '<div class="slide__ctas">' + ctas + "</div>" +
+        "</div>" + stack +
+      "</div></div>";
+  }
+
+  function heroCarousel() {
+    const n = S.hero.length;
+    return '<section class="carousel" aria-roledescription="carrusel" aria-label="Destacados">' +
+      '<div class="carousel__track">' + S.hero.map(heroSlide).join("") + "</div>" +
+      (n > 1 ? '<button class="carousel__arrow carousel__arrow--prev" type="button" aria-label="Anterior">' + N.ICON.prev + "</button>" +
+        '<button class="carousel__arrow carousel__arrow--next" type="button" aria-label="Siguiente">' + N.ICON.next + "</button>" +
+        '<div class="carousel__dots">' + S.hero.map((_, i) => '<button type="button" aria-label="Ir a la diapositiva ' + (i + 1) + '"></button>').join("") + "</div>" : "") +
+      "</section>";
+  }
+
+  function initHeroCarousel() {
+    const root = $(".carousel");
+    if (!root) return;
+    const track = $(".carousel__track", root), slides = $$(".slide", root), dots = $$(".carousel__dots button", root);
+    if (slides.length < 2) { slides[0] && slides[0].classList.add("is-active"); return; }
+    let i = 0, timer;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const go = (k) => {
+      i = (k + slides.length) % slides.length;
+      track.style.transform = "translateX(" + (-100 * i) + "%)";
+      slides.forEach((s, j) => { s.classList.toggle("is-active", j === i); s.setAttribute("aria-hidden", String(j !== i)); });
+      dots.forEach((d, j) => d.setAttribute("aria-current", String(j === i)));
+    };
+    const play = () => { if (reduce) return; clearInterval(timer); timer = setInterval(() => go(i + 1), 6000); };
+    const stop = () => clearInterval(timer);
+    $(".carousel__arrow--prev", root).addEventListener("click", () => { go(i - 1); play(); });
+    $(".carousel__arrow--next", root).addEventListener("click", () => { go(i + 1); play(); });
+    dots.forEach((d, j) => d.addEventListener("click", () => { go(j); play(); }));
+    root.addEventListener("mouseenter", stop); root.addEventListener("mouseleave", play);
+    root.addEventListener("focusin", stop); root.addEventListener("focusout", play);
+    // deslizar con el dedo
+    let x0 = null;
+    root.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; stop(); }, { passive: true });
+    root.addEventListener("touchend", (e) => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 40) go(i + (dx < 0 ? 1 : -1));
+      x0 = null; play();
+    });
+    document.addEventListener("visibilitychange", () => (document.hidden ? stop() : play()));
+    go(0); play();
+  }
+
+  // ================= CARRUSEL DE PRODUCTOS =================
+  function productRail(title, list, kicker, moreHref) {
+    if (!list.length) return "";
+    return '<section class="section"><div class="container">' +
+      '<div class="section__head"><div>' + (kicker ? '<p class="section__kicker">' + esc(kicker) + "</p>" : "") + '<h2 class="section__title">' + esc(title) + "</h2></div>" +
+      '<div class="rail__controls">' + (moreHref ? '<a class="section__link" href="' + url(moreHref) + '">Ver todos <span aria-hidden="true">→</span></a>' : "") +
+      '<button class="rail__btn" type="button" data-rail="-1" aria-label="Anterior">' + N.ICON.prev + '</button><button class="rail__btn" type="button" data-rail="1" aria-label="Siguiente">' + N.ICON.next + "</button></div></div>" +
+      '<div class="rail">' + list.map(N.productCard).join("") + "</div></div></section>";
+  }
+  function initRails() {
+    $$(".rail__controls").forEach((ctrl) => {
+      const rail = ctrl.closest(".container").querySelector(".rail");
+      $$("[data-rail]", ctrl).forEach((b) => b.addEventListener("click", () => {
+        rail.scrollBy({ left: Number(b.dataset.rail) * rail.clientWidth * 0.9, behavior: "smooth" });
+      }));
+    });
+  }
+
+  // ================= SECCIONES EXTRA =================
+  function goals() {
+    if (!S.goals) return "";
+    return '<section class="section goals"><div class="container">' +
+      '<div class="section__head section__head--center"><div><p class="section__kicker">¿Qué buscas?</p><h2 class="section__title">Compra por objetivo</h2></div></div>' +
+      '<div class="goals__grid">' + S.goals.map((g) =>
+        '<a class="goal" href="' + url(g.href) + '"><span class="goal__icon">' + (N.ICON[g.icon] || "") + '</span><span class="goal__title">' + esc(g.title) +
+        '</span><span class="goal__text">' + esc(g.text) + '</span><span class="goal__go" aria-hidden="true">→</span></a>').join("") +
+      "</div></div></section>";
+  }
+
+  function brandWall() {
+    const brands = S.brands.filter((b) => b.slug !== "otras" && C.getByBrand(b.slug).length);
+    if (!brands.length) return "";
+    const items = brands.map((b) => '<a class="brandwall__item" href="' + url("marca.html?m=" + b.slug) + '">' + esc(b.name) + "</a>").join("");
+    return '<section class="brandwall" aria-label="Nuestras marcas"><p class="brandwall__label">Marcas originales que manejamos</p>' +
+      '<div class="brandwall__mask"><div class="brandwall__track">' + items + '<span aria-hidden="true" class="brandwall__dup">' + items + "</span></div></div></section>";
+  }
+
+  function steps() {
+    if (!S.steps) return "";
+    return '<section class="steps"><div class="container">' +
+      '<div class="section__head section__head--center section__head--dark"><div><p class="section__kicker">Sin complicaciones</p><h2 class="section__title">Así de fácil compras</h2></div></div>' +
+      '<ol class="steps__grid">' + S.steps.map((st, k) =>
+        '<li class="step"><span class="step__n">0' + (k + 1) + '</span><h3 class="step__title">' + esc(st.title) + '</h3><p class="step__text">' + esc(st.text) + "</p></li>").join("") +
+      '</ol><div class="steps__cta"><a class="btn btn--light" href="' + waLink() + '" target="_blank" rel="noopener">Escríbenos por WhatsApp</a></div></div></section>';
+  }
+
   function renderHome() {
     const lim = (arr, n) => (n ? arr.slice(0, n) : arr);
     const best = lim(C.sortProducts(C.getBestSellers()), S.home.bestSellersLimit);
@@ -95,14 +212,18 @@
     const news = lim(C.sortProducts(C.getNew()), S.home.newLimit);
     main.innerHTML =
       '<h1 class="sr-only">' + esc(S.name) + " — Suplementos deportivos en Colombia</h1>" +
-      '<div class="hero-row">' + S.hero.map(heroBanner).join("") + "</div>" +
+      heroCarousel() +
       benefits() +
       categoryNav() +
-      section("Suplementos más vendidos", best, 4, "", "Los favoritos") +
+      productRail("Suplementos más vendidos", best, "Los favoritos") +
+      goals() +
+      productRail("Suplementos en oferta", offers, "Precio especial", "ofertas.html") +
+      brandWall() +
       (S.bannerRows[0] ? bannerRow(S.bannerRows[0]) : "") +
-      section("Suplementos en oferta", offers, 4, "ofertas.html", "Precio especial") +
-      (S.bannerRows[1] ? bannerRow(S.bannerRows[1]) : "") +
-      section("Nuevos suplementos", news, 5, "", "Recién llegados");
+      section("Nuevos suplementos", news, 5, "", "Recién llegados") +
+      steps();
+    initHeroCarousel();
+    initRails();
   }
 
   // ---------------- LISTADOS ----------------

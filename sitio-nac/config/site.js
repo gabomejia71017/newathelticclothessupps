@@ -36,34 +36,64 @@ window.SITE = {
     onlinePayments: false,  // pasarela de pagos (fase futura)
   },
 
-  /* Banners principales (hero). Si pones "image" (y opcional "imageMobile"),
-     se muestra tu foto. Si lo dejas vacío, se muestra el diseño tipográfico. */
+  /* CARRUSEL PRINCIPAL (pasa solo cada 6 segundos).
+     Cada diapositiva puede tener:
+     - image / imageMobile: tu foto de fondo (opcional; 1920x700 y 900x1100)
+     - products: slugs de productos cuyas fotos se muestran a la derecha
+     - theme: "dark" (negro) o "light" (blanco)
+     - cta: botones (máximo 2) */
   hero: [
     {
-      image: "",          // ej: "banners/hero-1.jpg"  (1920x800 recomendado)
-      imageMobile: "",    // ej: "banners/hero-1-movil.jpg" (900x1100)
       kicker: "NEW ATHLETIC CLOTHES",
       title: "SUPLEMENTACIÓN",
       subtitle: "CON ACTITUD",
+      text: "Proteínas, creatinas y pre-entrenos 100 % originales con envío a todo Colombia.",
       theme: "dark",
-      href: "categoria.html?c=proteinas",
-      alt: "Suplementación con actitud — New Athletic Clothes",
+      products: ["iso-100-5lb", "nitro-tech-whey-gold-5lb", "100-whey-gold-standard-5lb"],
       cta: [
-        { label: "Ver proteínas", href: "categoria.html?c=proteinas" },
+        { label: "Comprar ahora", href: "categoria.html?c=proteinas" },
         { label: "Ver ofertas", href: "ofertas.html" },
       ],
+      image: "", imageMobile: "",
     },
     {
-      image: "",
-      imageMobile: "",
       kicker: "ENTRENA • RECUPERA • REPITE",
       title: "TU MEJOR VERSIÓN",
       subtitle: "EMPIEZA HOY",
+      text: "Creatina para más fuerza en cada repetición. Elige la tuya.",
       theme: "light",
-      href: "ofertas.html",
-      alt: "Tu mejor versión empieza hoy",
+      products: ["creatina-platinum-muscletech", "tnt-mega-mass-gainer-10lb"],
       cta: [{ label: "Ver creatinas", href: "categoria.html?c=creatinas" }],
+      image: "", imageMobile: "",
     },
+    {
+      kicker: "PRECIO ESPECIAL",
+      title: "OFERTAS",
+      subtitle: "DE LA SEMANA",
+      text: "Descuentos en tus marcas favoritas por tiempo limitado.",
+      theme: "dark",
+      products: ["tnt-mega-mass-gainer-10lb", "nitro-tech-whey-gold-5lb", "iso-100-5lb"],
+      cta: [
+        { label: "Ver ofertas", href: "ofertas.html" },
+        { label: "Pedir por WhatsApp", href: "whatsapp" },
+      ],
+      image: "", imageMobile: "",
+    },
+  ],
+
+  // Sección "Compra por objetivo"
+  goals: [
+    { title: "Ganar masa", text: "Hipercalóricos y proteínas", href: "categoria.html?c=hipercaloricos", icon: "up" },
+    { title: "Más fuerza", text: "Creatinas para rendir más", href: "categoria.html?c=creatinas", icon: "bolt" },
+    { title: "Definir", text: "Proteínas limpias y quemadores", href: "categoria.html?c=quemadores", icon: "fire" },
+    { title: "Bienestar", text: "Vitaminas y minerales", href: "categoria.html?c=multivitaminicos", icon: "heart" },
+  ],
+
+  // Sección "Así de fácil compras"
+  steps: [
+    { title: "Elige tus productos", text: "Agrégalos al carrito con el sabor y la cantidad que quieras." },
+    { title: "Pide por WhatsApp", text: "Finaliza el pedido y te llega el resumen a nuestro chat." },
+    { title: "Recíbelo en casa", text: "Coordinamos el pago y te lo enviamos a cualquier ciudad." },
   ],
 
   // Barra de beneficios debajo del hero.
