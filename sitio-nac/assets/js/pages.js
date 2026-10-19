@@ -74,12 +74,23 @@
   }
 
   function bannerRow(row) {
-    return '<section class="banner-row"><div class="container banner-row__grid">' + row.map((t) =>
-      '<a class="tile' + (t.image ? " tile--image" : "") + '" href="' + url(t.href) + '">' +
-        (t.image ? '<img src="' + esc(url(t.image)) + '" alt="' + esc(t.title) + '" loading="lazy" width="800" height="1000">' : '<div class="tile__art" aria-hidden="true"></div>') +
-        '<div class="tile__content"><h3 class="tile__title">' + esc(t.title) + '</h3><p class="tile__text">' + esc(t.text) + '</p><span class="tile__link">Ver más</span></div>' +
-      "</a>").join("") + "</div></section>";
+    return '<section class="banner-row"><div class="container banner-row__grid">' + row.map((t, i) => {
+      const n = t.category ? C.getByCategory(t.category).length : 0;
+      const fl = (t.floating || []).slice(0, 2);
+      const visual = t.image
+        ? '<img class="tile__photo" src="' + esc(url(t.image)) + '" alt="' + esc(t.title) + '" loading="lazy" width="800" height="1000">'
+        : '<div class="tile__art" aria-hidden="true"><span class="tile__ring"></span><span class="tile__ring tile__ring--sm"></span></div>' +
+          (fl.length ? '<div class="tile__jars" aria-hidden="true">' + fl.map((src, k) =>
+            '<img class="tile__jar tile__jar--' + (k + 1) + '" src="' + esc(url(src)) + '" alt="" loading="lazy">').join("") + "</div>" : "");
+      return '<a class="tile tile--v2' + (t.image ? " tile--image" : "") + '" href="' + url(t.href) + '">' + visual +
+        '<div class="tile__content">' +
+          '<span class="tile__num">0' + (i + 1) + (n ? " · " + n + " productos" : "") + "</span>" +
+          '<h3 class="tile__title">' + esc(t.title) + '</h3><p class="tile__text">' + esc(t.text) + "</p>" +
+          '<span class="tile__link">Ver más <span aria-hidden="true">→</span></span>' +
+        "</div></a>";
+    }).join("") + "</div></section>";
   }
+
 
   function section(title, list, cols, moreHref, kicker) {
     return '<section class="section"><div class="container">' +

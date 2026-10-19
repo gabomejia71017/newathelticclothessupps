@@ -130,9 +130,9 @@ window.SITE = {
   // Filas de 3 banners verticales (proporción 4:5, recomendado 800x1000)
   bannerRows: [
     [
-      { title: "PROTEÍNAS", text: "Recuperación y masa muscular", href: "categoria.html?c=proteinas", image: "" },
-      { title: "CREATINAS", text: "Fuerza en cada repetición", href: "categoria.html?c=creatinas", image: "" },
-      { title: "PRE-ENTRENOS", text: "Energía para darlo todo", href: "categoria.html?c=pre-entrenos", image: "" },
+      { title: "PROTEÍNAS", text: "Recuperación y masa muscular", href: "categoria.html?c=proteinas", category: "proteinas", image: "", floating: ["products/sin-fondo/nitro-tech-whey-gold-5lb.png", "products/sin-fondo/iso-100-5lb.png"] },
+      { title: "CREATINAS", text: "Fuerza en cada repetición", href: "categoria.html?c=creatinas", category: "creatinas", image: "", floating: ["products/sin-fondo/creatina-platinum-muscletech.png", "products/sin-fondo/creatina-optimum-nutrition-600g.png"] },
+      { title: "PRE-ENTRENOS", text: "Energía para darlo todo", href: "categoria.html?c=pre-entrenos", category: "pre-entrenos", image: "", floating: ["products/sin-fondo/dylator-30-servicios.png", "products/sin-fondo/c4-original-60-servicios.png"] },
     ],
     [
       { title: "COMBOS", text: "Arma tu stack y ahorra", href: "combos.html", image: "" },
