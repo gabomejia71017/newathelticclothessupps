@@ -101,7 +101,9 @@
         '<img src="' + esc(url(b.image)) + '" alt="" ' + (i === 0 ? 'fetchpriority="high"' : 'loading="lazy"') + "></picture>"
       : "";
     const floats = (b.floating || []).slice(0, 3);
-    const stack = floats.length
+    const stack = (b.layout === "podium" && floats.length) ? podiumStage(b, floats, prods)
+      : (b.layout === "deal" && floats.length) ? dealStage(b, floats, prods)
+      : floats.length
       ? '<div class="stage stage--' + floats.length + '" aria-hidden="true">' +
         floats.map((src, k) => '<img class="stage__item stage__item--' + (k + 1) + '" src="' + esc(url(src)) + '" alt="" ' + (i === 0 ? "" : 'loading="eager"') + ' width="300" height="450">').join("") + "</div>"
       : prods.length
@@ -118,6 +120,38 @@
           (b.text ? '<p class="slide__text">' + esc(b.text) + "</p>" : "") +
           (ctas ? '<div class="slide__ctas">' + ctas + "</div>" : "") +
         "</div>" + stack +
+      "</div></div>";
+  }
+
+  // ---- Diseño "podio" (diapositiva de creatinas) ----
+  function podiumStage(b, floats, prods) {
+    const order = [1, 0, 2]; // izquierda = 2.º, centro = 1.º, derecha = 3.º
+    const steps = order.filter((k) => floats[k]).map((k) => {
+      const pr = prods[k];
+      return '<div class="podium__col podium__col--' + (k + 1) + '">' +
+        '<img class="podium__img" src="' + esc(url(floats[k])) + '" alt="" loading="eager">' +
+        '<div class="podium__step"><span class="podium__n">' + (k + 1) + '</span>' + (pr ? '<span class="podium__name">' + esc(pr.name) + "</span>" : "") + "</div></div>";
+    }).join("");
+    return '<div class="podium" aria-hidden="true">' + (b.bgWord ? '<span class="podium__word">' + esc(b.bgWord) + "</span>" : "") + '<div class="podium__row">' + steps + "</div></div>";
+  }
+
+  // ---- Diseño "oferta" (diapositiva de ofertas) ----
+  function dealStage(b, floats, prods) {
+    const tag = (pr) => {
+      if (!pr) return { pct: "", old: "", now: "" };
+      const info = C.priceInfo(pr);
+      const pct = info.regular > info.min ? Math.round((1 - info.min / info.regular) * 100) : 0;
+      return { pct: pct ? "−" + pct + "%" : "", old: info.regular > info.min ? money(info.regular) : "", now: money(info.min) };
+    };
+    const main = tag(prods[0]);
+    const side = floats.slice(1).map((src, k) => {
+      const t = tag(prods[k + 1]);
+      return '<div class="deal__side deal__side--' + (k + 1) + '"><img src="' + esc(url(src)) + '" alt="" loading="eager">' + (t.pct ? '<span class="deal__mini">' + t.pct + "</span>" : "") + "</div>";
+    }).join("");
+    return '<div class="deal" aria-hidden="true">' + side +
+      '<div class="deal__main"><img src="' + esc(url(floats[0])) + '" alt="" loading="eager">' +
+        (main.pct ? '<div class="deal__badge"><svg class="deal__ring" viewBox="0 0 120 120"><defs><path id="dealc" d="M60,60 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0"/></defs><text><textPath href="#dealc">OFERTA • OFERTA • OFERTA • OFERTA • </textPath></text></svg><span class="deal__pct">' + main.pct + "</span></div>" : "") +
+        '<div class="deal__price">' + (main.old ? '<s>' + main.old + "</s>" : "") + "<strong>" + main.now + "</strong>" + (prods[0] ? '<span>' + esc(prods[0].name) + "</span>" : "") + "</div>" +
       "</div></div>";
   }
 
