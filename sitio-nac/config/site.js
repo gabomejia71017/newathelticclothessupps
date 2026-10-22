@@ -196,8 +196,8 @@ window.SITE = {
   ],
 
   // Medios de pago que aparecen en el footer (texto editable)
-  paymentMethods: ["Transferencia", "Nequi", "Daviplata", "Bre-B", "Tarjeta débito/crédito", "Contraentrega*"],
-  paymentNote: "*Sujeto a cobertura. Coordinamos el pago contigo por WhatsApp.",
+  paymentMethods: ["Transferencia", "Nequi", "Daviplata", "Bre-B", "Tarjeta débito/crédito"],
+  paymentNote: "Coordinamos el pago contigo por WhatsApp.",
 
   // Enlaces legales del footer
   legal: [
