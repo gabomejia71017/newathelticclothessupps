@@ -38,6 +38,12 @@
     bolt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M13 2.5 4.5 13.5h6.5l-1 8 8.5-11h-6.5z"/></svg>',
     fire: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M12 21.5c-4 0-7-2.8-7-6.6 0-3.4 2.4-5.6 4-8.4.6 2 1.6 3.2 2.8 3.9C12 7.6 13 5 12.6 2.5c3.6 2.2 6.4 6.6 6.4 11.4 0 4.4-3 7.6-7 7.6Z"/><path d="M12 21.5c-1.7 0-3-1.3-3-3 0-1.9 1.6-3 2.4-4.7 1.7 1.2 3.6 2.6 3.6 4.7 0 1.7-1.3 3-3 3Z"/></svg>',
     heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-8-4.7-8-10.7A4.3 4.3 0 0 1 12 7.5a4.3 4.3 0 0 1 8 2.3c0 6-8 10.7-8 10.7Z"/><path d="M3.5 12h4l1.5-2.5 2.5 5 1.5-2.5h7.5" stroke-linecap="round"/></svg>',
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z"/></svg>',
+    grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>',
+    filter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>',
+    share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3.5M7.5 8 12 3.5 16.5 8"/><path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
     prev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>',
     next: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>',
     instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/></svg>',
@@ -56,11 +62,20 @@
       "</svg>";
   }
 
-  function productImage(p, i = 0, cls = "") {
+  /** Miniatura WebP liviana (products/w/…) generada con scripts/miniaturas.py */
+  const thumbOf = (src) => src.replace(/^products\/([^/]+)\.[a-z]+$/i, "products/w/$1.webp");
+  function imgFallback(img) {
+    // 1.º intento: miniatura → foto original. 2.º: recuadro gris.
+    if (img.dataset.full && img.getAttribute("src") !== img.dataset.full) { img.src = img.dataset.full; img.removeAttribute("data-full"); return; }
+    img.outerHTML = placeholder(img.alt);
+  }
+  function productImage(p, i = 0, cls = "", opts = {}) {
     const src = p.images && p.images[i];
     if (!src) return placeholder(p.name);
-    // Si la foto aún no existe en /products, se reemplaza por el recuadro gris
-    return '<img class="' + cls + '" src="' + esc(url(src)) + '" alt="' + esc(p.name) + '" loading="lazy" decoding="async" width="600" height="600" onerror="this.outerHTML=window.NAC.placeholder(this.alt)">';
+    const full = url(src), small = url(thumbOf(src));
+    const useThumb = !opts.full && small !== full;
+    return '<img class="' + cls + '" src="' + esc(useThumb ? small : full) + '"' + (useThumb ? ' data-full="' + esc(full) + '"' : "") +
+      ' alt="' + esc(p.name) + '" ' + (opts.eager ? 'fetchpriority="high"' : 'loading="lazy"') + ' decoding="async" width="600" height="600" onerror="window.NAC.imgFallback(this)">';
   }
 
   function priceHTML(p) {
@@ -123,6 +138,7 @@
     const cur = (name) => (page === name ? ' aria-current="page"' : "");
     const catLinks = S.categories.map((c) => '<li><a href="' + url("categoria.html?c=" + c.slug) + '">' + esc(c.name) + "</a></li>").join("");
     const brandLinks = S.brands.map((b) => '<li><a href="' + url("marca.html?m=" + b.slug) + '">' + esc(b.name) + "</a></li>").join("");
+    const hasCombos = C.getCombos().length > 0;
     const account = S.features.showAccount ? '<li><a class="nav__link" href="' + url("cuenta.html") + '">Mi cuenta</a></li>' : "";
 
     el.innerHTML =
@@ -134,7 +150,7 @@
             '<li><a class="nav__link" href="' + url("index.html") + '"' + cur("home") + ">Inicio</a></li>" +
             '<li><button class="nav__link" type="button" aria-expanded="false" aria-controls="mega-cat" data-mega="mega-cat">Categorías ' + ICON.chevron + "</button></li>" +
             '<li><button class="nav__link" type="button" aria-expanded="false" aria-controls="mega-brand" data-mega="mega-brand">Marcas ' + ICON.chevron + "</button></li>" +
-            '<li><a class="nav__link" href="' + url("combos.html") + '"' + cur("combos") + ">Combos</a></li>" +
+            (hasCombos ? '<li><a class="nav__link" href="' + url("combos.html") + '"' + cur("combos") + ">Combos</a></li>" : "") +
             '<li><a class="nav__link" href="' + url("ofertas.html") + '"' + cur("ofertas") + ">Ofertas</a></li>" +
             account +
           "</ul></nav>" +
@@ -160,7 +176,8 @@
           '<li><a class="mobile-menu__link" href="' + url("index.html") + '">Inicio</a></li>' +
           '<li><button class="mobile-menu__toggle" type="button" aria-expanded="false" aria-controls="m-cat">Categorías ' + ICON.chevron + '</button><ul class="mobile-menu__sub" id="m-cat">' + catLinks + "</ul></li>" +
           '<li><button class="mobile-menu__toggle" type="button" aria-expanded="false" aria-controls="m-brand">Marcas ' + ICON.chevron + '</button><ul class="mobile-menu__sub" id="m-brand">' + brandLinks + "</ul></li>" +
-          '<li><a class="mobile-menu__link" href="' + url("combos.html") + '">Combos</a></li>' +
+          (hasCombos ? '<li><a class="mobile-menu__link" href="' + url("combos.html") + '">Combos</a></li>' : "") +
+          '<li><a class="mobile-menu__link" href="' + url("novedades.html") + '">Novedades</a></li>' +
           '<li><a class="mobile-menu__link" href="' + url("ofertas.html") + '">Ofertas</a></li>' +
           '<li><a class="mobile-menu__link" href="' + url("carrito.html") + '">Carrito</a></li>' +
         "</ul>" +
@@ -204,8 +221,16 @@
         '<div class="cart-drawer__body" data-cart-lines></div>' +
         '<div class="cart-drawer__foot" data-cart-foot></div>' +
       "</aside>" +
-      '<div class="toast" role="status" aria-live="polite"></div>';
+      '<div class="toast" role="status" aria-live="polite"></div>' +
+      '<nav class="tabbar" aria-label="Accesos rápidos">' +
+        '<a class="tabbar__item" href="' + url("index.html") + '"' + (document.body.dataset.page === "home" ? ' aria-current="page"' : "") + ">" + ICON.home + "<span>Inicio</span></a>" +
+        '<button class="tabbar__item" type="button" data-open-menu>' + ICON.grid + "<span>Categorías</span></button>" +
+        '<button class="tabbar__item" type="button" data-toggle-search>' + ICON.search + "<span>Buscar</span></button>" +
+        '<button class="tabbar__item" type="button" data-open-cart>' + ICON.cart + '<span class="cart-count" data-cart-count data-count="0">0</span><span>Carrito</span></button>' +
+        '<a class="tabbar__item tabbar__item--wa" href="' + waLink() + '" target="_blank" rel="noopener">' + ICON.chat + "<span>WhatsApp</span></a>" +
+      "</nav>";
     document.body.append(...wrap.childNodes);
+    document.body.classList.add("has-tabbar");
 
     const toTop = $(".to-top");
     const onScroll = () => toTop.classList.toggle("is-visible", window.scrollY > 600);
@@ -218,6 +243,8 @@
     const t = $(".toast");
     if (!t) return;
     t.textContent = msg;
+    // Con un panel abierto, el aviso solo se anuncia al lector de pantalla
+    t.classList.toggle("toast--sr", document.body.classList.contains("no-scroll"));
     t.classList.add("is-visible");
     clearTimeout(toast._t);
     toast._t = setTimeout(() => t.classList.remove("is-visible"), 2200);
@@ -243,6 +270,7 @@
       const found = items.find((i) => i.key === k);
       if (found) found.qty += qty; else items.push({ key: k, id, variant: variant || "", qty });
       Cart.write(items);
+      $$("[data-cart-count]").forEach((el) => { el.classList.remove("is-bump"); void el.offsetWidth; el.classList.add("is-bump"); });
     },
     setQty(key, qty) {
       let items = Cart.read();
@@ -316,7 +344,12 @@
       foot.innerHTML = '<a class="btn btn--outline btn--block" href="' + url("index.html") + '">Ver productos</a>';
       return;
     }
-    body.innerHTML = lines.map((l) => lineHTML(l)).join("");
+    const inCart = new Set(lines.map((l) => l.product.id));
+    const cats = new Set(lines.map((l) => l.product.category));
+    const sug = C.getBestSellers().filter((p) => !inCart.has(p.id) && !cats.has(p.category) && C.inStock(p)).slice(0, 3);
+    body.innerHTML = lines.map((l) => lineHTML(l)).join("") +
+      (sug.length ? '<div class="upsell"><p class="upsell__title">Complétalo con</p>' + sug.map((p) =>
+        '<a class="upsell__item" href="' + url("producto.html?p=" + p.slug) + '"><span class="upsell__img">' + productImage(p) + '</span><span class="upsell__txt"><span>' + esc(p.name) + "</span>" + priceHTML(p) + "</span></a>").join("") + "</div>" : "");
     foot.innerHTML =
       '<div class="cart-total"><span>Subtotal</span><span>' + money(Cart.subtotal()) + "</span></div>" +
       '<p class="fine" style="margin:0">El envío se coordina por WhatsApp según tu ciudad.</p>' +
@@ -402,7 +435,10 @@
     $$("[data-open-cart]").forEach((b) => b.addEventListener("click", () => openDrawer($("#cart-drawer"))));
     document.addEventListener("click", (e) => { if (e.target.closest("[data-close-drawers], [data-backdrop]")) closeDrawers(); });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") { closeDrawers(); closeMegas(); }
+      if (e.key === "Escape") {
+        closeDrawers(); closeMegas();
+        const sr = $("#search"); if (sr && sr.classList.contains("is-open")) { sr.classList.remove("is-open"); document.body.classList.remove("search-open"); }
+      }
     });
     bindLines($("[data-cart-lines]"));
 
@@ -414,13 +450,22 @@
       const open = !search.classList.contains("is-open");
       search.classList.toggle("is-open", open);
       $$("[data-toggle-search]").forEach((x) => x.setAttribute("aria-expanded", String(open)));
-      if (open) input.focus(); else { results.innerHTML = ""; }
+      document.body.classList.toggle("search-open", open);
+      if (open) { results.innerHTML = input.value.trim().length < 2 ? suggestions() : results.innerHTML; input.focus(); } else { results.innerHTML = ""; }
     }));
     let active = -1;
+    const suggestions = () => {
+      const cats = S.categories.filter((c) => C.getByCategory(c.slug).length).slice(0, 8);
+      const brands = S.brands.filter((b) => b.slug !== "otras").map((b) => [b, C.getByBrand(b.slug).length]).sort((a, b) => b[1] - a[1]).slice(0, 8).map((x) => x[0]);
+      return '<li class="search__group"><p class="search__label">Categorías</p><div class="search__chips">' +
+        cats.map((c) => '<a class="chip" href="' + url("categoria.html?c=" + c.slug) + '">' + esc(c.name) + "</a>").join("") + "</div></li>" +
+        '<li class="search__group"><p class="search__label">Marcas más buscadas</p><div class="search__chips">' +
+        brands.map((b) => '<a class="chip" href="' + url("marca.html?m=" + b.slug) + '">' + esc(b.name) + "</a>").join("") + "</div></li>";
+    };
     const renderResults = () => {
       const q = input.value.trim();
       active = -1;
-      if (q.length < 2) { results.innerHTML = ""; return; }
+      if (q.length < 2) { results.innerHTML = suggestions(); return; }
       const found = C.search(q);
       if (!found.length) { results.innerHTML = '<li class="search__empty">No encontramos productos para "' + esc(q) + '".</li>'; return; }
       results.innerHTML = found.slice(0, 6).map((p) =>
@@ -455,6 +500,14 @@
     window.addEventListener("storage", (e) => { if (e.key === CART_KEY) Cart.render(); });
   }
 
-  window.NAC = { $, $$, esc, money, url, waLink, ICON, placeholder, productImage, priceHTML, productCard, productGrid, Cart, orderMessage, toast, openCart: () => openDrawer($("#cart-drawer")), closeDrawers };
+  // ---------- Vistos recientemente ----------
+  const RECENT_KEY = "nac_recent_v1";
+  const Recent = {
+    read() { try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; } catch (e) { return []; } },
+    push(slug) { try { const l = Recent.read().filter((s) => s !== slug); l.unshift(slug); localStorage.setItem(RECENT_KEY, JSON.stringify(l.slice(0, 12))); } catch (e) {} },
+    products(exclude) { return Recent.read().filter((s) => s !== exclude).map(C.getProductBySlug).filter(Boolean); },
+  };
+
+  window.NAC = { $, $$, esc, money, url, waLink, ICON, placeholder, productImage, imgFallback, Recent, priceHTML, productCard, productGrid, Cart, orderMessage, toast, openCart: () => openDrawer($("#cart-drawer")), closeDrawers };
   init();
 })();

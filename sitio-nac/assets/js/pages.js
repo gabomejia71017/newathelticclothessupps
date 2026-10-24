@@ -266,32 +266,108 @@
       benefits() +
       categoryNav() +
       productRail("Suplementos más vendidos", best, "Los favoritos") +
+      (N.Recent.products().length >= 2 ? productRail("Vistos recientemente", N.Recent.products().slice(0, 12), "Sigue donde quedaste") : "") +
       goals() +
       productRail("Suplementos en oferta", offers, "Precio especial", "ofertas.html") +
       brandWall() +
       (S.bannerRows[0] ? bannerRow(S.bannerRows[0]) : "") +
-      section("Nuevos suplementos", news, 5, "", "Recién llegados") +
+      productRail("Nuevos suplementos", news.slice(0, 12), "Recién llegados", "novedades.html") +
       steps();
     initHeroCarousel();
     initRails();
   }
 
   // ---------------- LISTADOS ----------------
-  function renderListing({ title, subtitle, list, crumbs, chips }) {
+  function renderListing({ title, subtitle, list, crumbs }) {
     setMeta(title, subtitle || ("Compra " + title.toLowerCase() + " en " + S.name + ". Envíos a todo Colombia."));
     const crumbHTML = '<nav class="breadcrumb" aria-label="Ruta"><a href="' + url("index.html") + '">Inicio</a>' + (crumbs || []).map((c) => " / " + (c.href ? '<a href="' + url(c.href) + '">' + esc(c.label) + "</a>" : esc(c.label))).join("") + "</nav>";
+    const PAGE = 24;
+    const st = { brands: new Set(), cats: new Set(), price: "", sale: false, sort: "", shown: PAGE };
+    const count = (arr, key) => { const m = new Map(); arr.forEach((p) => m.set(p[key], (m.get(p[key]) || 0) + 1)); return [...m.entries()].sort((x, y) => y[1] - x[1]); };
+    const brandOpts = count(list, "brand").filter(([k]) => C.getBrand(k));
+    const catOpts = count(list, "category").filter(([k]) => C.getCategory(k));
+    const PRICES = [["0-100000", "Menos de $100.000"], ["100000-200000", "$100.000 a $200.000"], ["200000-300000", "$200.000 a $300.000"], ["300000-99999999", "Más de $300.000"]];
+    const priceOpts = PRICES.filter(([r]) => { const [lo, hi] = r.split("-").map(Number); return list.some((p) => { const v = C.priceInfo(p).min; return v >= lo && v < hi; }); });
+    const hasSale = list.some(C.isOnSale) && !list.every(C.isOnSale);
+    const group = (name, label, opts, type) => opts.length < 2 ? "" :
+      '<fieldset class="filters__group"><legend>' + label + "</legend>" + opts.map(([v, txt, n]) =>
+        '<label class="check"><input type="' + type + '" name="' + name + '" value="' + esc(v) + '"><span>' + esc(txt) + "</span>" + (n ? '<em>' + n + "</em>" : "") + "</label>").join("") + "</fieldset>";
+    const filtersHTML =
+      '<aside class="filters" id="filters" aria-label="Filtros"><div class="filters__head"><h2>Filtrar</h2><button class="icon-btn" type="button" data-filters-close aria-label="Cerrar filtros">' + N.ICON.close + "</button></div>" +
+      '<form class="filters__body" data-filters>' +
+        (hasSale ? '<fieldset class="filters__group"><legend>Precio especial</legend><label class="check"><input type="checkbox" name="sale" value="1"><span>Solo productos en oferta</span></label></fieldset>' : "") +
+        group("cat", "Categoría", catOpts.map(([k, n]) => [k, C.getCategory(k).name, n]), "checkbox") +
+        group("brand", "Marca", brandOpts.map(([k, n]) => [k, C.getBrand(k).name, n]), "checkbox") +
+        group("price", "Precio", [["", "Todos los precios"]].concat(priceOpts), "radio") +
+      "</form>" +
+      '<div class="filters__foot"><button class="btn btn--outline" type="button" data-filters-clear>Limpiar</button><button class="btn" type="button" data-filters-close data-filters-apply>Ver productos</button></div></aside>';
+
     main.innerHTML =
       heroCarousel() +
       '<div class="page-head page-head--compact"><div class="container">' + crumbHTML + "<h1>" + esc(title) + "</h1>" + (subtitle ? "<p>" + esc(subtitle) + "</p>" : "") + "</div></div>" +
-      '<div class="container listing"><div class="toolbar"><span class="toolbar__count" data-list-count></span>' +
-        '<label><span class="sr-only">Ordenar</span><select class="select" data-sort><option value="">Ordenar: destacados</option><option value="price-asc">Precio: menor a mayor</option><option value="price-desc">Precio: mayor a menor</option><option value="name">Nombre A–Z</option></select></label>' +
-      '</div><div data-grid></div></div>';
-    const draw = () => {
-      const sorted = C.sortProducts(list, $("[data-sort]").value);
-      $("[data-grid]").innerHTML = N.productGrid(sorted, 4);
-      $("[data-list-count]").textContent = list.length + (list.length === 1 ? " producto" : " productos");
+      '<div class="container listing listing--filters">' + filtersHTML +
+        '<div class="listing__main"><div class="toolbar">' +
+          '<button class="btn btn--outline btn--sm toolbar__filter" type="button" data-filters-open aria-controls="filters">' + N.ICON.filter + 'Filtrar<span class="toolbar__badge" data-fcount></span></button>' +
+          '<span class="toolbar__count" data-list-count aria-live="polite"></span>' +
+          '<label class="toolbar__sort"><span class="sr-only">Ordenar</span><select class="select" data-sort><option value="">Destacados</option><option value="price-asc">Precio: menor a mayor</option><option value="price-desc">Precio: mayor a menor</option><option value="discount">Mayor descuento</option><option value="name">Nombre A–Z</option></select></label>' +
+        '</div><div class="active-filters" data-active></div><div data-grid></div><div class="loadmore" data-more></div></div>' +
+      "</div>" + '<div class="filters-backdrop" data-filters-close></div>';
+
+    const form = $("[data-filters]");
+    const filtered = () => list.filter((p) => {
+      if (st.sale && !C.isOnSale(p)) return false;
+      if (st.brands.size && !st.brands.has(p.brand)) return false;
+      if (st.cats.size && !st.cats.has(p.category)) return false;
+      if (st.price) { const [lo, hi] = st.price.split("-").map(Number); const v = C.priceInfo(p).min; if (v < lo || v >= hi) return false; }
+      return true;
+    });
+    const sortList = (l) => {
+      if (st.sort === "discount") {
+        const d = (p) => { const i = C.priceInfo(p); return i.regular > i.min ? 1 - i.min / i.regular : 0; };
+        return l.slice().sort((x, y) => d(y) - d(x));
+      }
+      return C.sortProducts(l, st.sort);
     };
-    $("[data-sort]").addEventListener("change", draw);
+    const draw = (keepShown) => {
+      if (!keepShown) st.shown = PAGE;
+      const res = sortList(filtered());
+      $("[data-grid]").innerHTML = res.length ? N.productGrid(res.slice(0, st.shown), 4)
+        : '<div class="empty"><p>Ningún producto coincide con estos filtros.</p><button class="btn" type="button" data-filters-clear>Quitar filtros</button></div>';
+      $("[data-list-count]").textContent = res.length + (res.length === 1 ? " producto" : " productos");
+      const left = res.length - st.shown;
+      $("[data-more]").innerHTML = left > 0 ? '<p class="loadmore__info">Viendo ' + st.shown + " de " + res.length + '</p><div class="loadmore__bar"><span style="width:' + Math.round(100 * st.shown / res.length) + '%"></span></div><button class="btn btn--outline" type="button" data-loadmore>Ver más productos</button>' : "";
+      const chips = [];
+      if (st.sale) chips.push(["sale", "1", "En oferta"]);
+      st.cats.forEach((k) => chips.push(["cat", k, C.getCategory(k).name]));
+      st.brands.forEach((k) => chips.push(["brand", k, C.getBrand(k).name]));
+      if (st.price) chips.push(["price", st.price, PRICES.find((x) => x[0] === st.price)[1]]);
+      $("[data-active]").innerHTML = chips.length ? chips.map(([n, v, l]) => '<button class="chip chip--on" type="button" data-unset="' + n + '" data-value="' + esc(v) + '">' + esc(l) + ' <span aria-hidden="true">×</span><span class="sr-only">Quitar filtro</span></button>').join("") + '<button class="chip chip--clear" type="button" data-filters-clear>Limpiar todo</button>' : "";
+      const fc = $("[data-fcount]"); fc.textContent = chips.length || ""; fc.hidden = !chips.length;
+      const ap = $("[data-filters-apply]"); if (ap) ap.textContent = "Ver " + res.length + (res.length === 1 ? " producto" : " productos");
+    };
+    const readForm = () => {
+      const fd = new FormData(form);
+      st.sale = fd.has("sale"); st.brands = new Set(fd.getAll("brand")); st.cats = new Set(fd.getAll("cat")); st.price = fd.get("price") || "";
+      draw();
+    };
+    form.addEventListener("change", readForm);
+    const clear = () => { form.reset(); readForm(); };
+    const openF = (on) => { $("#filters").classList.toggle("is-open", on); document.body.classList.toggle("filters-open", on); if (on) $("#filters button").focus(); };
+    main.addEventListener("click", (e) => {
+      if (e.target.closest("[data-filters-clear]")) clear();
+      else if (e.target.closest("[data-filters-open]")) openF(true);
+      else if (e.target.closest("[data-filters-close]")) openF(false);
+      else if (e.target.closest("[data-loadmore]")) { st.shown += PAGE; draw(true); }
+      else {
+        const u = e.target.closest("[data-unset]"); if (!u) return;
+        const inp = form.querySelector('[name="' + u.dataset.unset + '"][value="' + CSS.escape(u.dataset.value) + '"]');
+        if (inp) { if (inp.type === "radio") form.querySelector('[name="price"][value=""]').checked = true; else inp.checked = false; }
+        readForm();
+      }
+    });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") openF(false); });
+    const pr = form.querySelector('[name="price"][value=""]'); if (pr) pr.checked = true;
+    $("[data-sort]").addEventListener("change", (e) => { st.sort = e.target.value; draw(); });
     draw();
     initHeroCarousel();
   }
@@ -321,59 +397,102 @@
   }
 
   // ---------------- DETALLE DE PRODUCTO ----------------
+  const COMPLEMENTS = {
+    proteinas: ["creatinas", "pre-entrenos", "termos-shakers"], creatinas: ["proteinas", "pre-entrenos"], "pre-entrenos": ["creatinas", "aminoacidos"],
+    hipercaloricos: ["creatinas", "proteinas"], quemadores: ["proteinas", "pre-entrenos"], aminoacidos: ["proteinas", "glutaminas"],
+    glutaminas: ["proteinas", "creatinas"], multivitaminicos: ["proteinas", "precursores-naturales"], snacks: ["proteinas", "termos-shakers"],
+    "termos-shakers": ["proteinas", "creatinas"], "precursores-naturales": ["multivitaminicos", "proteinas"],
+  };
+  function stackFor(p) {
+    const cats = COMPLEMENTS[p.category] || [];
+    const out = [];
+    cats.forEach((c) => {
+      const pool = C.getByCategory(c).filter(C.inStock);
+      const pick = pool.filter((x) => x.bestSeller).concat(pool.filter((x) => !x.bestSeller));
+      out.push(...pick.slice(0, cats.length > 2 ? 3 : 4));
+    });
+    return out.slice(0, 10);
+  }
+  function relatedFor(p) {
+    const base = C.priceInfo(p).min;
+    return C.getByCategory(p.category).filter((x) => x.id !== p.id && C.inStock(x))
+      .sort((x, y) => (Number(y.brand === p.brand) - Number(x.brand === p.brand)) || (Math.abs(C.priceInfo(x).min - base) - Math.abs(C.priceInfo(y).min - base)))
+      .slice(0, 10);
+  }
+
   function renderProduct() {
     const p = C.getProductBySlug(params.get("p"));
     if (!p) return notFound("Este producto no existe o ya no está disponible.");
     const cat = C.getCategory(p.category);
     const brand = C.getBrand(p.brand);
-    setMeta(p.name, (p.description || "").slice(0, 155));
+    setMeta(p.name, (brand ? brand.name + " · " : "") + p.name + ". " + (p.description || "").slice(0, 120));
+    N.Recent.push(p.slug);
 
     const hasV = C.hasVariants(p);
     let variant = hasV ? (p.variants.find((v) => v.stock > 0) || p.variants[0]).name : "";
-    let current = 0;
 
     const thumbs = (p.images || []).length > 1
       ? '<div class="gallery__thumbs">' + p.images.map((src, i) => '<button class="gallery__thumb" type="button" data-thumb="' + i + '" aria-label="Ver imagen ' + (i + 1) + '"' + (i === 0 ? ' aria-current="true"' : "") + '><img src="' + esc(url(src)) + '" alt="" loading="lazy"></button>').join("") + "</div>"
       : "";
-
     const variantsHTML = hasV
-      ? '<span class="pdp__label" id="vlabel">' + esc(p.variantLabel || "Opción") + ': <span data-vname></span></span><div class="variants" role="group" aria-labelledby="vlabel">' +
-        p.variants.map((v) => '<button class="variant" type="button" data-variant="' + esc(v.name) + '"' + (v.stock > 0 ? "" : ' disabled title="Agotado"') + ">" + esc(v.name) + "</button>").join("") + "</div>"
+      ? '<div class="pdp__block"><span class="pdp__label" id="vlabel">' + esc(p.variantLabel || "Opción") + ': <strong data-vname></strong></span><div class="variants" role="group" aria-labelledby="vlabel">' +
+        p.variants.map((v) => '<button class="variant" type="button" data-variant="' + esc(v.name) + '"' + (v.stock > 0 ? "" : ' disabled title="Agotado"') + ">" + esc(v.name) + "</button>").join("") + "</div></div>"
       : "";
+    const trust = [
+      ["shield", "Producto 100 % original", "Solo vendemos productos originales."],
+      ["truck", "Envíos a todo Colombia", "Coordinamos el envío según tu ciudad."],
+      ["chat", "Asesoría por WhatsApp", "Te ayudamos a elegir sabor y presentación."],
+      ["card", "Paga como prefieras", S.paymentMethods.join(", ") + "."],
+    ];
+    const acc = (title, body, open) => '<details class="acc"' + (open ? " open" : "") + '><summary>' + esc(title) + '<span class="acc__icon" aria-hidden="true"></span></summary><div class="acc__body">' + body + "</div></details>";
+    const info = C.priceInfo(p);
 
     main.innerHTML =
-      '<div class="container pdp">' +
-        '<nav class="breadcrumb breadcrumb--light" aria-label="Ruta"><a href="' + url("index.html") + '">Inicio</a> / ' + (cat ? '<a href="' + url("categoria.html?c=" + cat.slug) + '">' + esc(cat.name) + "</a> / " : "") + esc(p.name) + "</nav>" +
+      '<div class="container pdp pdp--v2">' +
+        '<nav class="breadcrumb breadcrumb--light" aria-label="Ruta"><a href="' + url("index.html") + '">Inicio</a> / ' + (cat ? '<a href="' + url("categoria.html?c=" + cat.slug) + '">' + esc(cat.name) + "</a> / " : "") + '<span aria-current="page">' + esc(p.name) + "</span></nav>" +
         '<div class="pdp__grid">' +
-          '<div class="gallery"><div class="gallery__main" data-main>' + (C.isOnSale(p) ? '<span class="badge">¡Oferta!</span>' : "") + N.productImage(p, 0) + "</div>" + thumbs + "</div>" +
-          "<div>" +
-            (brand ? '<div class="pdp__brand"><a href="' + url("marca.html?m=" + brand.slug) + '">' + esc(brand.name) + "</a></div>" : "") +
+          '<div class="gallery"><div class="gallery__main" data-main>' + (C.isOnSale(p) ? '<span class="badge">' + (info.regular > info.min && info.min === info.max ? "−" + Math.round((1 - info.min / info.regular) * 100) + "%" : "¡Oferta!") + "</span>" : "") +
+            N.productImage(p, 0, "gallery__img", { full: true, eager: true }) + '<span class="gallery__hint" aria-hidden="true">Pasa el mouse para ampliar</span></div>' + thumbs + "</div>" +
+          '<div class="pdp__info">' +
+            '<div class="pdp__top">' + (brand ? '<a class="pdp__brand" href="' + url("marca.html?m=" + brand.slug) + '">' + esc(brand.name) + "</a>" : "<span></span>") +
+              '<button class="pdp__share" type="button" data-share>' + N.ICON.share + "<span>Compartir</span></button></div>" +
             '<h1 class="pdp__title">' + esc(p.name) + "</h1>" +
-            '<p class="pdp__price" data-price></p>' +
-            '<div class="pdp__stock" data-stock></div>' +
+            '<div class="pdp__pricebox"><p class="pdp__price" data-price></p><p class="pdp__save" data-save></p></div>' +
+            '<p class="pdp__stock" data-stock></p>' +
             variantsHTML +
-            '<span class="pdp__label">Cantidad</span>' +
+            '<div class="pdp__block"><span class="pdp__label">Cantidad</span>' +
             '<div class="pdp__buy"><div class="qty"><button type="button" aria-label="Restar uno" data-q="-1">−</button><input type="number" min="1" max="99" value="1" aria-label="Cantidad" data-qinput><button type="button" aria-label="Sumar uno" data-q="1">+</button></div>' +
-            '<button class="btn" type="button" data-add>Agregar al carrito</button></div>' +
-            '<a class="btn btn--outline btn--block" data-wa target="_blank" rel="noopener">Pedir por WhatsApp</a>' +
-            '<div class="pdp__desc"><h2>Descripción</h2><p>' + esc(p.description) + "</p></div>" +
-            '<div class="pdp__meta">' + (cat ? 'Categoría: <a href="' + url("categoria.html?c=" + cat.slug) + '">' + esc(cat.name) + "</a>" : "") + "</div>" +
-            '<p class="notice">Los suplementos no reemplazan una alimentación balanceada. Consulta con un profesional de la salud antes de consumirlos.</p>' +
+            '<button class="btn pdp__add" type="button" data-add>Agregar al carrito</button></div>' +
+            '<a class="btn btn--outline btn--block pdp__wa" data-wa target="_blank" rel="noopener">' + N.ICON.chat + "Pedir por WhatsApp</a></div>" +
+            '<ul class="trust">' + trust.map(([ic, t, d]) => '<li><span class="trust__icon">' + N.ICON[ic] + '</span><span><strong>' + esc(t) + "</strong><span>" + esc(d) + "</span></span></li>").join("") + "</ul>" +
+            '<div class="accs">' +
+              acc("Descripción", "<p>" + esc(p.description) + "</p>" + (cat ? '<p class="pdp__meta">Categoría: <a href="' + url("categoria.html?c=" + cat.slug) + '">' + esc(cat.name) + "</a>" + (brand ? ' · Marca: <a href="' + url("marca.html?m=" + brand.slug) + '">' + esc(brand.name) + "</a>" : "") + "</p>" : ""), true) +
+              acc("Envíos", "<p>Hacemos envíos a todo Colombia. Al finalizar tu pedido por WhatsApp te confirmamos el costo y el tiempo de entrega según tu ciudad.</p>") +
+              acc("Medios de pago", "<p>" + esc(S.paymentMethods.join(", ")) + ". " + esc(S.paymentNote) + "</p>") +
+              acc("Uso responsable", "<p>Los suplementos no reemplazan una alimentación balanceada. Consulta con un profesional de la salud antes de consumirlos.</p>") +
+            "</div>" +
           "</div>" +
         "</div>" +
       "</div>" +
-      (C.getRelated(p).length ? '<section class="section"><div class="container"><h2 class="section__title">También te puede interesar</h2>' + N.productGrid(C.getRelated(p), 4) + "</div></section>" : "");
+      productRail("Completa tu stack", stackFor(p), "Combínalo con") +
+      productRail("También te puede interesar", relatedFor(p), cat ? cat.name : "", cat ? "categoria.html?c=" + cat.slug : "") +
+      (N.Recent.products(p.slug).length ? productRail("Vistos recientemente", N.Recent.products(p.slug), "Tu historial") : "") +
+      '<div class="buybar" data-buybar aria-hidden="true"><div class="container buybar__inner">' +
+        '<span class="buybar__img">' + N.productImage(p) + '</span><span class="buybar__txt"><strong>' + esc(p.name) + '</strong><span data-bprice></span></span>' +
+        '<button class="btn" type="button" data-add2 tabindex="-1">Agregar</button></div></div>';
 
     const qInput = $("[data-qinput]");
     const update = () => {
       const unitObj = hasV ? p.variants.find((v) => v.name === variant) : p;
       const ok = C.inStock(p, variant || undefined);
       const reg = unitObj.price, eff = C.unitPrice(p, variant);
-      $("[data-price]").innerHTML = eff < reg ? '<span class="price-old">' + money(reg) + '</span><span class="price-new">' + money(eff) + "</span>" : '<span class="price-new">' + money(eff) + "</span>";
+      $("[data-price]").innerHTML = eff < reg ? '<span class="price-old"><span class="sr-only">Antes </span>' + money(reg) + '</span><span class="price-new"><span class="sr-only">Ahora </span>' + money(eff) + "</span>" : '<span class="price-new">' + money(eff) + "</span>";
+      $("[data-save]").textContent = eff < reg ? "Ahorras " + money(reg - eff) : "";
+      $("[data-bprice]").textContent = money(eff);
       const st = $("[data-stock]");
-      st.textContent = ok ? "Disponible" : "Agotado";
+      st.innerHTML = ok ? '<span class="dot"></span>Disponible para envío' : "Agotado";
       st.classList.toggle("is-out", !ok);
-      $("[data-add]").disabled = !ok;
+      [$("[data-add]"), $("[data-add2]")].forEach((b) => { b.disabled = !ok; });
       $("[data-add]").textContent = ok ? "Agregar al carrito" : "Agotado";
       $$("[data-variant]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.variant === variant)));
       const vn = $("[data-vname]"); if (vn) vn.textContent = variant;
@@ -384,23 +503,55 @@
     $$("[data-variant]").forEach((b) => b.addEventListener("click", () => { variant = b.dataset.variant; update(); }));
     $$("[data-q]").forEach((b) => b.addEventListener("click", () => { qInput.value = Math.max(1, Math.min(99, (Number(qInput.value) || 1) + Number(b.dataset.q))); update(); }));
     qInput.addEventListener("change", () => { qInput.value = Math.max(1, Math.min(99, Number(qInput.value) || 1)); update(); });
-    $("[data-add]").addEventListener("click", () => {
+    const add = () => {
       N.Cart.add(p.id, variant, Math.max(1, Number(qInput.value) || 1));
-      N.toast("Producto agregado al carrito");
       N.openCart();
-    });
+      N.toast("Agregado al carrito: " + p.name + (variant ? " · " + variant : ""));
+    };
+    $("[data-add]").addEventListener("click", add);
+    $("[data-add2]").addEventListener("click", add);
     $$("[data-thumb]").forEach((b) => b.addEventListener("click", () => {
-      current = Number(b.dataset.thumb);
-      const img = $("[data-main] img"); if (img) img.src = url(p.images[current]);
+      const img = $("[data-main] img"); if (img) img.src = url(p.images[Number(b.dataset.thumb)]);
       $$("[data-thumb]").forEach((x) => x.setAttribute("aria-current", String(x === b)));
     }));
+    // Zoom al pasar el mouse (solo con puntero fino)
+    const mainImg = $("[data-main]");
+    if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+      mainImg.classList.add("can-zoom");
+      mainImg.addEventListener("mousemove", (e) => {
+        const r = mainImg.getBoundingClientRect(); const img = $("img", mainImg); if (!img) return;
+        img.style.transformOrigin = ((e.clientX - r.left) / r.width * 100) + "% " + ((e.clientY - r.top) / r.height * 100) + "%";
+      });
+    }
+    // Compartir
+    $("[data-share]").addEventListener("click", async () => {
+      const data = { title: p.name, text: p.name + " en " + S.name, url: location.href };
+      try { if (navigator.share) { await navigator.share(data); return; } await navigator.clipboard.writeText(location.href); N.toast("Enlace copiado"); }
+      catch (e) { /* cancelado */ }
+    });
+    // Barra fija de compra cuando el botón principal sale de pantalla
+    const bar = $("[data-buybar]");
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(([en]) => {
+        const show = !en.isIntersecting && en.boundingClientRect.top < 0;
+        bar.classList.toggle("is-visible", show); bar.setAttribute("aria-hidden", String(!show));
+        $("[data-add2]").tabIndex = show ? 0 : -1;
+      }).observe($("[data-add]"));
+    }
     update();
+    initRails();
 
     // Datos estructurados (SEO)
-    const info = C.priceInfo(p);
-    const ld = { "@context": "https://schema.org", "@type": "Product", name: p.name, description: p.description, brand: brand ? { "@type": "Brand", name: brand.name } : undefined,
-      offers: { "@type": "AggregateOffer", priceCurrency: "COP", lowPrice: info.min, highPrice: info.max, availability: C.inStock(p) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock" } };
-    const s = document.createElement("script"); s.type = "application/ld+json"; s.textContent = JSON.stringify(ld); document.head.appendChild(s);
+    const abs = (u) => new URL(url(u), location.href).href;
+    const ld = [{ "@context": "https://schema.org", "@type": "Product", name: p.name, description: p.description, sku: String(p.id),
+      image: (p.images || []).map(abs), brand: brand ? { "@type": "Brand", name: brand.name } : undefined, category: cat ? cat.name : undefined,
+      offers: { "@type": "AggregateOffer", priceCurrency: "COP", lowPrice: info.min, highPrice: info.max, offerCount: hasV ? p.variants.length : 1, url: location.href,
+        availability: C.inStock(p) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock" } },
+      { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Inicio", item: abs("index.html") },
+        cat ? { "@type": "ListItem", position: 2, name: cat.name, item: abs("categoria.html?c=" + cat.slug) } : null,
+        { "@type": "ListItem", position: cat ? 3 : 2, name: p.name, item: location.href }].filter(Boolean) }];
+    const sc = document.createElement("script"); sc.type = "application/ld+json"; sc.textContent = JSON.stringify(ld); document.head.appendChild(sc);
   }
 
   // ---------------- CARRITO ----------------
@@ -476,6 +627,7 @@
     categoria: renderCategory,
     marca: renderBrand,
     ofertas: () => renderListing({ title: "Ofertas", subtitle: "Suplementos con precio especial por tiempo limitado.", list: C.getOffers(), crumbs: [{ label: "Ofertas" }] }),
+    novedades: () => renderListing({ title: "Novedades", subtitle: "Los suplementos que acaban de llegar a la tienda.", list: C.sortProducts(C.getNew()), crumbs: [{ label: "Novedades" }] }),
     combos: () => renderListing({ title: "Combos", subtitle: "Arma tu stack y ahorra con nuestros combos.", list: C.getCombos(), crumbs: [{ label: "Combos" }] }),
     buscar: renderSearch,
     producto: renderProduct,

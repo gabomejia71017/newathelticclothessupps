@@ -146,3 +146,8 @@ La arquitectura ya está separada para crecer sin rehacer el diseño:
 4. **Migración a Next.js** si el catálogo crece mucho y quieres páginas de producto pre-generadas para SEO.
 
 Al guardar datos en un servidor deberás: registrar la base de datos ante la SIC (RNBD) si aplica, pedir autorización expresa en los formularios, usar HTTPS (ya incluido en Vercel/Cloudflare) y actualizar la política de datos.
+
+## Miniaturas de productos (carga rápida)
+Las tarjetas usan versiones livianas en `products/w/<nombre>.webp`. Si subes fotos nuevas a `products/`,
+genera sus miniaturas con `python3 scripts/miniaturas.py` (desde `sitio-nac`). Si no lo haces,
+la tienda usa la foto original automáticamente (funciona igual, solo carga un poco más lento).
